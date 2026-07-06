@@ -81,7 +81,7 @@
             @php
                 $u = auth()->user();
                 $showAdmin = $u->isManager()
-                    || $u->canAny(['manage-employees','manage-representatives','manage-roles','manage-settings']);
+                    || $u->canAny(['manage-employees','manage-representatives','manage-external-companies','manage-roles','manage-settings']);
             @endphp
             @if($showAdmin)
                 <p class="px-3 pt-5 pb-2 text-[11px] font-semibold uppercase tracking-wider text-white/35">الإدارة</p>
@@ -90,6 +90,9 @@
                 @endcan
                 @can('manage-representatives')
                     <x-nav-link href="{{ route('representatives.index') }}" :active="str_starts_with($r,'representatives')" icon="idcard">المناديب</x-nav-link>
+                @endcan
+                @can('manage-external-companies')
+                    <x-nav-link href="{{ route('external-companies.index') }}" :active="str_starts_with($r,'external-companies')" icon="building">الشركات الخارجية</x-nav-link>
                 @endcan
                 @can('manage-roles')
                     <x-nav-link href="{{ route('roles.index') }}" :active="str_starts_with($r,'roles')" icon="shield">الأدوار والصلاحيات</x-nav-link>
@@ -136,6 +139,11 @@
             @if (session('success'))
                 <div class="mb-4 flex items-start gap-2 rounded-xl border border-ok/25 bg-ok/8 px-4 py-3 text-sm text-ok">
                     <span>✓</span><span>{{ session('success') }}</span>
+                </div>
+            @endif
+            @if (session('error'))
+                <div class="mb-4 flex items-start gap-2 rounded-xl border border-danger/25 bg-danger/8 px-4 py-3 text-sm text-danger">
+                    <span>⚠</span><span>{{ session('error') }}</span>
                 </div>
             @endif
             @yield('content')

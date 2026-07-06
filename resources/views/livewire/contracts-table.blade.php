@@ -78,7 +78,7 @@
                                 <p class="font-semibold text-ink">{{ $c->project_name }}</p>
                                 <p class="text-[12px] text-ink-muted">{{ $c->developer_name }}@if($c->neighborhood) · {{ $c->neighborhood }}@endif</p>
                             </td>
-                            <td class="px-3 py-3 text-[12px] text-ink-muted">{{ $c->type_label }}</td>
+                            <td class="px-3 py-3 text-[12px] text-ink-muted">{{ $c->type_label }}<span class="mx-1 text-ink/20">·</span>{{ $c->transaction_label }}</td>
                             <td class="px-3 py-3 text-ink-muted">{{ $c->employee?->name ?: '—' }}</td>
                             <td class="px-3 py-3 tabular-nums text-ink-muted">{{ $c->end_date->format('Y-m-d') }}</td>
                             <td class="px-3 py-3">

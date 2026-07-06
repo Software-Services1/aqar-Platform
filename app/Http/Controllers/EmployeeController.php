@@ -74,6 +74,7 @@ class EmployeeController extends Controller
             'phone'     => ['nullable', 'string', 'max:30'],
             'role'      => ['required', 'exists:roles,name'],
             'is_active' => ['boolean'],
+            'password'  => ['nullable', 'confirmed', \Illuminate\Validation\Rules\Password::min(8)],
         ]);
 
         $employee->update([
@@ -83,8 +84,27 @@ class EmployeeController extends Controller
             'is_active' => $request->boolean('is_active'),
         ]);
 
+        // تغيير كلمة المرور من قِبل الأدمن (اختياري)
+        if (! empty($data['password'])) {
+            $employee->password = $data['password']; // يُجزّأ عبر الـ cast
+            $employee->save();
+        }
+
         $employee->syncRoles([$data['role']]);
 
         return redirect()->route('employees.index')->with('success', 'تم تحديث بيانات الموظف.');
+    }
+
+    public function destroy(Employee $employee)
+    {
+        Gate::authorize('manage-employees');
+
+        if ($employee->id === auth()->id()) {
+            return back()->with('error', 'لا يمكنك حذف حسابك الخاص.');
+        }
+
+        $employee->delete();
+
+        return redirect()->route('employees.index')->with('success', 'تم حذف الموظف.');
     }
 }

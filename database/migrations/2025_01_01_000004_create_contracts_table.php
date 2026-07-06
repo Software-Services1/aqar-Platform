@@ -21,6 +21,12 @@ return new class extends Migration
 
             // نوع العقد: حصري | وساطة | تسويق
             $table->enum('contract_type', ['exclusive', 'brokerage', 'marketing'])->default('brokerage');
+            // نوع الصفقة: إيجار | بيع
+            $table->enum('transaction_type', ['rent', 'sale'])->default('sale');
+            // العقد الأصل (للعقود الفرعية لشركات أخرى)
+            $table->unsignedBigInteger('parent_id')->nullable();
+            // الشركة الخارجية (للعقود الفرعية)
+            $table->unsignedBigInteger('external_company_id')->nullable();
 
             // المسؤول عن العقد (موظف)
             $table->foreignId('employee_id')->nullable()->constrained('employees')->nullOnDelete();
@@ -42,6 +48,9 @@ return new class extends Migration
             $table->index('end_date');
             $table->index('contract_type');
             $table->index('neighborhood');
+            $table->index('parent_id');
+            $table->index('external_company_id');
+            $table->index('transaction_type');
         });
     }
 

@@ -30,6 +30,9 @@ Route::middleware('auth')->group(function () {
 
     // العقود
     Route::resource('contracts', ContractController::class);
+    // العقود الفرعية (بصلاحية create-subcontract)
+    Route::get('contracts/{contract}/sub', [ContractController::class, 'createSub'])->name('contracts.sub.create');
+    Route::post('contracts/{contract}/sub', [ContractController::class, 'storeSub'])->name('contracts.sub.store');
 
     // التراخيص (لكل موظف ترخيص واحد لكل عقد) + تعديل/حذف
     Route::get('contracts/{contract}/license/create', [AdLicenseController::class, 'create'])->name('licenses.create');
@@ -48,8 +51,9 @@ Route::middleware('auth')->group(function () {
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
 
     // الإدارة (محميّة بالصلاحيات داخل المتحكمات)
-    Route::resource('employees', EmployeeController::class)->only(['index', 'create', 'store', 'edit', 'update']);
+    Route::resource('employees', EmployeeController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     Route::resource('representatives', RepresentativeController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('external-companies', \App\Http\Controllers\ExternalCompanyController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('roles', RoleController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('platforms', PlatformController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::get('settings', [SettingsController::class, 'edit'])->name('settings.edit');

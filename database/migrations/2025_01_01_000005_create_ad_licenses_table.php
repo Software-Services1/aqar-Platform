@@ -28,6 +28,9 @@ return new class extends Migration
 
             // موظف واحد = ترخيص واحد لكل عقد
             $table->unique(['contract_id', 'employee_id']);
+            $table->index('platform_count');
+            $table->index('status');
+            $table->index('issue_date');
         });
     }
 

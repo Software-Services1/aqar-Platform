@@ -13,9 +13,11 @@ class RolePermissionSeeder extends Seeder
     public const PERMISSIONS = [
         'view-reports'          => 'عرض التقارير',
         'manage-contracts'      => 'إدارة العقود',
+        'create-subcontract'    => 'إنشاء عقد فرعي',
         'manage-licenses'       => 'إدارة كل التراخيص',
         'manage-employees'      => 'إدارة الموظفين',
         'manage-representatives' => 'إدارة المناديب',
+        'manage-external-companies' => 'إدارة الشركات الخارجية',
         'manage-roles'          => 'إدارة الأدوار والصلاحيات',
         'manage-settings'       => 'إعدادات النظام',
     ];

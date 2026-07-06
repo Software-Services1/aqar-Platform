@@ -14,8 +14,8 @@ class Contract extends Model
 
     protected $fillable = [
         'contract_number', 'project_name', 'developer_name', 'developer_phone',
-        'neighborhood', 'contract_type', 'employee_id', 'representative_id',
-        'created_by', 'start_date', 'end_date', 'approval_status', 'notes',
+        'neighborhood', 'contract_type', 'transaction_type', 'employee_id', 'representative_id',
+        'created_by', 'parent_id', 'external_company_id', 'start_date', 'end_date', 'approval_status', 'notes',
     ];
 
     protected function casts(): array
@@ -30,6 +30,11 @@ class Contract extends Model
         'exclusive' => 'حصري',
         'brokerage' => 'وساطة',
         'marketing' => 'تسويق',
+    ];
+
+    public const TRANSACTION_TYPES = [
+        'rent' => 'إيجار',
+        'sale' => 'بيع',
     ];
 
     public const STATUSES = [
@@ -57,9 +62,27 @@ class Contract extends Model
         return $this->belongsTo(Employee::class, 'created_by');
     }
 
+    /** الشركة الخارجية (للعقود الفرعية) */
+    public function externalCompany(): BelongsTo
+    {
+        return $this->belongsTo(ExternalCompany::class);
+    }
+
     public function licenses(): HasMany
     {
         return $this->hasMany(AdLicense::class);
+    }
+
+    /** العقد الأصل (إن كان هذا عقداً فرعياً) */
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Contract::class, 'parent_id');
+    }
+
+    /** العقود الفرعية المتفرّعة من هذا العقد */
+    public function subContracts(): HasMany
+    {
+        return $this->hasMany(Contract::class, 'parent_id');
     }
 
     /* ----------------------- الحسابات ----------------------- */
@@ -87,6 +110,16 @@ class Contract extends Model
     public function getTypeLabelAttribute(): string
     {
         return self::TYPES[$this->contract_type] ?? $this->contract_type;
+    }
+
+    public function getTransactionLabelAttribute(): string
+    {
+        return self::TRANSACTION_TYPES[$this->transaction_type] ?? '—';
+    }
+
+    public function getIsSubcontractAttribute(): bool
+    {
+        return ! is_null($this->parent_id);
     }
 
     public function getStatusLabelAttribute(): string
@@ -184,6 +217,11 @@ class Contract extends Model
     public function scopeOfType(Builder $q, ?string $type): Builder
     {
         return blank($type) ? $q : $q->where('contract_type', $type);
+    }
+
+    public function scopeOfTransaction(Builder $q, ?string $t): Builder
+    {
+        return blank($t) ? $q : $q->where('transaction_type', $t);
     }
 
     public function scopeInNeighborhood(Builder $q, ?string $n): Builder

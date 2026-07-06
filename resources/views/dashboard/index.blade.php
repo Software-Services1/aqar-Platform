@@ -106,8 +106,8 @@ $cards = [
         type: 'line',
         data: { labels: @json($monthlyChart['labels']),
             datasets: [{ data: @json($monthlyChart['data']),
-                borderColor: '#A77C3C', backgroundColor: 'rgba(167,124,60,.12)',
-                fill: true, tension: .4, pointRadius: 4, pointBackgroundColor: '#A77C3C', borderWidth: 2.5 }] },
+                borderColor: '#1499B0', backgroundColor: 'rgba(20,153,176,.12)',
+                fill: true, tension: .4, pointRadius: 4, pointBackgroundColor: '#1499B0', borderWidth: 2.5 }] },
         options: { plugins: { legend: { display: false } },
             scales: { y: { beginAtZero: true, grid: { color: grid }, ticks: { precision: 0 } }, x: { grid: { display: false } } } },
     });

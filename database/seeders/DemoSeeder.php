@@ -8,6 +8,7 @@ use App\Models\Employee;
 use App\Models\Platform;
 use App\Models\Representative;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Role;
 
 class DemoSeeder extends Seeder
 {
@@ -29,6 +30,14 @@ class DemoSeeder extends Seeder
             return $emp;
         });
 
+        // دور مخصّص «مدير عقود» يملك صلاحية إدارة العقود (لعرض كل العقود دون دور مدير)
+        $contractsManager = Role::firstOrCreate(['name' => 'مدير عقود', 'guard_name' => 'web']);
+        $contractsManager->syncPermissions(['manage-contracts', 'view-reports']);
+        $employees[1]->syncRoles(['مدير عقود']); // فهد يرى كل العقود بكل حالاتها
+
+        // منح سارة صلاحية إنشاء عقد فرعي مباشرةً (لتجربة الميزة)
+        $employees[0]->givePermissionTo('create-subcontract');
+
         $reps = collect([
             ['name' => 'خالد المطيري', 'phone' => '0551111111'],
             ['name' => 'عبدالله السبيعي', 'phone' => '0552222222'],
@@ -40,18 +49,19 @@ class DemoSeeder extends Seeder
             'url'  => 'https://ads.example.com/' . urlencode($n) . '/' . rand(1000, 9999),
         ])->all();
 
-        // [مشروع, مطوّر, حالة, نوع, حي, نهاية]
+        // [مشروع, مطوّر, حالة, نوع, صفقة, حي, نهاية]
         $samples = [
-            ['مشروع الواحة',  'شركة درّة',   'approved',  'brokerage', 'النرجس',   now()->addDays(40)],
-            ['برج اللؤلؤة',   'مطور النخبة', 'approved',  'exclusive', 'الياسمين', now()->addDays(4)],
-            ['حدائق الريان',  'دار البناء',  'pending',   'marketing', 'الملقا',   now()->addDays(20)],
-            ['أبراج السلام',  'إعمار الشرق', 'expired',   'brokerage', 'الصحافة',  now()->subDays(10)],
-            ['فلل المروج',    'ركن التطوير', 'cancelled', 'exclusive', 'العارض',   now()->addDays(15)],
-            ['ضاحية النخيل',  'بناء المستقبل','finished',  'marketing', 'النرجس',   now()->subDays(2)],
-            ['ربوة المدينة',  'تعمير',       'approved',  'brokerage', 'القيروان', now()->addDays(70)],
+            ['مشروع الواحة',  'شركة درّة',   'approved',  'brokerage', 'sale', 'النرجس',   now()->addDays(40)],
+            ['برج اللؤلؤة',   'مطور النخبة', 'approved',  'exclusive', 'rent', 'الياسمين', now()->addDays(4)],
+            ['حدائق الريان',  'دار البناء',  'pending',   'marketing', 'sale', 'الملقا',   now()->addDays(20)],
+            ['أبراج السلام',  'إعمار الشرق', 'expired',   'brokerage', 'rent', 'الصحافة',  now()->subDays(10)],
+            ['فلل المروج',    'ركن التطوير', 'cancelled', 'exclusive', 'sale', 'العارض',   now()->addDays(15)],
+            ['ضاحية النخيل',  'بناء المستقبل','finished',  'marketing', 'rent', 'النرجس',   now()->subDays(2)],
+            ['ربوة المدينة',  'تعمير',       'approved',  'brokerage', 'sale', 'القيروان', now()->addDays(70)],
         ];
 
-        foreach ($samples as $i => [$project, $dev, $status, $type, $hood, $end]) {
+        $first = null;
+        foreach ($samples as $i => [$project, $dev, $status, $type, $deal, $hood, $end]) {
             $contract = Contract::create([
                 'contract_number'   => '62' . str_pad((string) ($i + 1), 5, '0', STR_PAD_LEFT),
                 'project_name'      => $project,
@@ -59,6 +69,7 @@ class DemoSeeder extends Seeder
                 'developer_phone'   => '0539' . str_pad((string) $i, 6, '0', STR_PAD_LEFT),
                 'neighborhood'      => $hood,
                 'contract_type'     => $type,
+                'transaction_type'  => $deal,
                 'employee_id'       => $employees[$i % $employees->count()]->id,
                 'representative_id' => $reps[$i % $reps->count()]->id,
                 'created_by'        => $manager->id,
@@ -66,8 +77,8 @@ class DemoSeeder extends Seeder
                 'end_date'          => $end,
                 'approval_status'   => $status,
             ]);
+            $first ??= $contract;
 
-            // العقد المعتمد الأول: ترخيص منشور بالكامل + ترخيص جزئي (لتجربة الحالات)
             if ($project === 'مشروع الواحة') {
                 AdLicense::create([
                     'contract_id' => $contract->id, 'employee_id' => $employees[0]->id,
@@ -83,7 +94,6 @@ class DemoSeeder extends Seeder
                 ]);
             }
 
-            // برج اللؤلؤة: ترخيص بلا نشر (none)
             if ($project === 'برج اللؤلؤة') {
                 AdLicense::create([
                     'contract_id' => $contract->id, 'employee_id' => $contract->employee_id,
@@ -92,8 +102,30 @@ class DemoSeeder extends Seeder
                     'platforms' => [], 'status' => 'created_unpublished',
                 ]);
             }
-
-            // ربوة المدينة: عقد معتمد بلا أي ترخيص (لتجربة «بلا ترخيص»)
         }
+
+        // مثال عقد فرعي مشتق من العقد الأول (لشركة أخرى) — بدون ترخيص
+        $extCompany = \App\Models\ExternalCompany::firstOrCreate(
+            ['name' => 'شركة الأفق العقارية'],
+            ['contact_person' => 'ماجد الحربي', 'phone' => '0567778888', 'is_active' => true]
+        );
+
+        Contract::create([
+            'contract_number'  => '62F0001',
+            'project_name'     => $first->project_name,
+            'developer_name'   => 'شركة الشريك الخارجي',
+            'developer_phone'  => $first->developer_phone,
+            'neighborhood'     => $first->neighborhood,
+            'contract_type'    => $first->contract_type,
+            'transaction_type' => $first->transaction_type,
+            'employee_id'      => $employees[0]->id,
+            'representative_id' => $first->representative_id,
+            'created_by'       => $employees[0]->id,
+            'parent_id'        => $first->id,
+            'external_company_id' => $extCompany->id,
+            'start_date'       => now()->subDays(10),
+            'end_date'         => now()->addDays(50),
+            'approval_status'  => 'pending',
+        ]);
     }
 }

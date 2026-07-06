@@ -34,6 +34,15 @@
         @error('contract_type')<p class="err">{{ $message }}</p>@enderror
     </div>
     <div>
+        <label class="lbl">نوع الصفقة</label>
+        <select name="transaction_type" class="inp">
+            @foreach ($transactionTypes as $k => $v)
+                <option value="{{ $k }}" @selected(old('transaction_type', $c?->transaction_type ?? 'sale') === $k)>{{ $v }}</option>
+            @endforeach
+        </select>
+        @error('transaction_type')<p class="err">{{ $message }}</p>@enderror
+    </div>
+    <div>
         <label class="lbl">المسؤول عن العقد</label>
         <select name="employee_id" class="inp">
             <option value="">— غير محدد —</option>

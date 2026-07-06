@@ -13,21 +13,28 @@ class AdLicenseController extends Controller
 {
     public function index(Request $request)
     {
-        $from = $request->input('from');
-        $to   = $request->input('to');
+        $from       = $request->input('from');
+        $to         = $request->input('to');
+        $employeeId = $request->input('employee_id');
 
         $query = AdLicense::with(['contract', 'employee'])
             ->betweenIssueDates($from, $to)
             ->latest();
 
         if (! $this->canManageAll()) {
+            // الموظف يرى تراخيصه فقط
             $query->where('employee_id', auth()->id());
+        } elseif ($employeeId) {
+            // المدير/صاحب الصلاحية: فلترة باسم الموظف
+            $query->where('employee_id', $employeeId);
         }
 
         return view('licenses.index', [
-            'licenses' => $query->paginate(15)->withQueryString(),
-            'from'     => $from,
-            'to'       => $to,
+            'licenses'   => $query->paginate(15)->withQueryString(),
+            'from'       => $from,
+            'to'         => $to,
+            'employeeId' => $employeeId,
+            'employees'  => $this->canManageAll() ? Employee::orderBy('name')->get() : collect(),
         ]);
     }
 

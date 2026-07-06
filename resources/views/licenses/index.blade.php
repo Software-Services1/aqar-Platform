@@ -17,8 +17,19 @@ $pub = ['none' => ['لم يُنشر', 'text-danger bg-danger/10'], 'partial' => 
             <label class="lbl">إلى تاريخ الإصدار</label>
             <input type="date" name="to" value="{{ $to }}" class="inp">
         </div>
+        @if ($employees->isNotEmpty())
+        <div>
+            <label class="lbl">اسم الموظف</label>
+            <select name="employee_id" class="inp">
+                <option value="">كل الموظفين</option>
+                @foreach ($employees as $emp)
+                    <option value="{{ $emp->id }}" @selected($employeeId == $emp->id)>{{ $emp->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        @endif
         <button class="rounded-xl bg-ink px-5 py-2.5 text-sm font-semibold text-white hover:bg-ink-soft">تطبيق</button>
-        @if($from || $to)
+        @if($from || $to || $employeeId)
             <a href="{{ route('licenses.index') }}" class="rounded-xl px-4 py-2.5 text-sm font-medium text-ink-muted hover:bg-paper">مسح</a>
         @endif
     </div>

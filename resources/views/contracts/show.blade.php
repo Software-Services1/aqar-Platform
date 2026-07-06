@@ -15,6 +15,9 @@
             <div class="flex items-center justify-between border-b border-ink/8 px-6 py-4">
                 <div class="flex items-center gap-3">
                     <x-status-pill :state="$vs" />
+                    @if($contract->is_subcontract)
+                        <span class="rounded-full bg-brass/12 px-2.5 py-0.5 text-[12px] font-semibold text-brass">عقد فرعي</span>
+                    @endif
                     <h2 class="font-display text-lg font-bold text-ink">{{ $contract->project_name }}</h2>
                 </div>
                 @can('manage-contracts')
@@ -31,6 +34,7 @@
                 @foreach ([
                     'رقم العقد'      => $contract->contract_number,
                     'نوع العقد'      => $contract->type_label,
+                    'نوع الصفقة'     => $contract->transaction_label,
                     'الحي'           => $contract->neighborhood ?: '—',
                     'المطوّر'        => $contract->developer_name,
                     'جوال المطوّر'   => $contract->developer_phone ?: '—',
@@ -56,8 +60,54 @@
             @endif
         </div>
 
-        {{-- كل تراخيص الموظفين (للمدير) --}}
-        @if ($canManageLic)
+        {{-- العقود الفرعية / العقد الأصل --}}
+        <div class="overflow-hidden rounded-2xl bg-white shadow-card">
+            <div class="flex items-center justify-between border-b border-ink/8 px-5 py-3">
+                <p class="font-display font-bold text-ink">العقود الفرعية <span class="text-ink-muted">({{ $contract->subContracts->count() }})</span></p>
+                @can('create-subcontract')
+                    <a href="{{ route('contracts.sub.create', $contract) }}" class="inline-flex items-center gap-1.5 rounded-lg bg-brass px-3 py-1.5 text-[13px] font-semibold text-white hover:opacity-90">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                        إنشاء عقد فرعي
+                    </a>
+                @endcan
+            </div>
+            @if($contract->is_subcontract)
+                <div class="border-b border-ink/8 bg-brass/5 px-5 py-3 text-[13px]">
+                    مشتق من العقد الأصل:
+                    <a href="{{ route('contracts.show', $contract->parent) }}" class="font-semibold text-brass hover:underline">{{ $contract->parent->project_name }} ({{ $contract->parent->contract_number }})</a>
+                </div>
+                @if($contract->externalCompany)
+                    <div class="grid grid-cols-3 gap-px border-b border-ink/8 bg-ink/5">
+                        @foreach ([
+                            'الشركة الخارجية' => $contract->externalCompany->name,
+                            'المسؤول عن العقد' => $contract->externalCompany->contact_person ?: '—',
+                            'رقم الجوال' => $contract->externalCompany->phone ?: '—',
+                        ] as $k => $v)
+                            <div class="bg-white px-5 py-3">
+                                <dt class="text-[11px] text-ink-muted">{{ $k }}</dt>
+                                <dd class="mt-0.5 text-sm font-semibold text-ink" @if($k==='رقم الجوال') dir="ltr" @endif>{{ $v }}</dd>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            @endif
+            @forelse ($contract->subContracts as $sub)
+                <div class="flex items-center justify-between border-b border-ink/5 px-5 py-3 last:border-0 hover:bg-paper/60">
+                    <div>
+                        <p class="text-sm font-semibold text-ink">{{ $sub->project_name }}</p>
+                        <p class="text-[11px] font-mono text-ink-muted">{{ $sub->contract_number }} · {{ $sub->transaction_label }} · {{ $sub->developer_name }}</p>
+                    </div>
+                    <a href="{{ route('contracts.show', $sub) }}" class="text-[13px] font-semibold text-brass hover:underline">عرض ←</a>
+                </div>
+            @empty
+                @unless($contract->is_subcontract)
+                    <p class="px-5 py-5 text-center text-[13px] text-ink-muted">لا توجد عقود فرعية لهذا العقد.</p>
+                @endunless
+            @endforelse
+        </div>
+
+        {{-- كل تراخيص الموظفين (للمدير) — لا تظهر للعقود الفرعية --}}
+        @if ($canManageLic && ! $contract->is_subcontract)
             <div class="overflow-hidden rounded-2xl bg-white shadow-card">
                 <div class="flex items-center justify-between border-b border-ink/8 px-5 py-3">
                     <p class="font-display font-bold text-ink">تراخيص الموظفين <span class="text-ink-muted">({{ $contract->licenses->count() }})</span></p>
@@ -96,6 +146,12 @@
 
     {{-- ترخيصي + التنبيهات --}}
     <div class="space-y-4">
+        @if($contract->is_subcontract)
+        <div class="rounded-2xl border border-brass/20 bg-brass/5 p-5 text-center">
+            <p class="text-sm font-semibold text-ink">عقد فرعي لشركة خارجية</p>
+            <p class="mt-1 text-[13px] text-ink-muted">لا يتطلّب إصدار ترخيص إعلاني.</p>
+        </div>
+        @else
         <div class="rounded-2xl bg-white p-5 shadow-card">
             <h3 class="font-display font-bold text-ink">ترخيصي لهذا العقد</h3>
             @if ($myLicense)
@@ -135,6 +191,7 @@
                 </div>
             @endif
         </div>
+        @endif
 
         @if ($contract->is_expiring_soon)
             <div class="rounded-2xl border border-danger/20 bg-danger/5 p-4">

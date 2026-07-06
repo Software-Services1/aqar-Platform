@@ -27,8 +27,14 @@
                         <span class="{{ $emp->is_active ? 'text-ok' : 'text-gone' }} text-[12px] font-semibold">{{ $emp->is_active ? 'نشط' : 'موقوف' }}</span>
                     </td>
                     <td class="px-3 py-3 tabular-nums">{{ $emp->contracts_count }}</td>
-                    <td class="px-3 py-3 text-left">
+                    <td class="px-3 py-3 text-left whitespace-nowrap">
                         <a href="{{ route('employees.edit', $emp) }}" class="text-[13px] font-semibold text-brass hover:underline">تعديل</a>
+                        @if($emp->id !== auth()->id())
+                        <form method="POST" action="{{ route('employees.destroy', $emp) }}" class="inline" onsubmit="return confirm('حذف الموظف «{{ $emp->name }}» نهائياً؟')">
+                            @csrf @method('DELETE')
+                            <button class="mr-2 text-[13px] font-semibold text-danger hover:underline">حذف</button>
+                        </form>
+                        @endif
                     </td>
                 </tr>
             @endforeach

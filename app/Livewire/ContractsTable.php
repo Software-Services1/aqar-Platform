@@ -55,11 +55,12 @@ class ContractsTable extends Component
     public function render()
     {
         $user = auth()->user();
+        $canManageContracts = $user->isManager() || $user->can('manage-contracts');
 
         $query = Contract::query()->with(['employee', 'representative', 'licenses']);
 
-        // الموظف يرى العقود المعتمدة فقط (لإنشاء ترخيصه)
-        if (! $user->isManager()) {
+        // الموظف العادي يرى العقود المعتمدة فقط؛ صاحب صلاحية إدارة العقود يرى الجميع بكل الحالات
+        if (! $canManageContracts) {
             $query->approved();
         } elseif ($this->employee !== '') {
             $query->where('employee_id', $this->employee);
@@ -87,7 +88,7 @@ class ContractsTable extends Component
 
         return view('livewire.contracts-table', [
             'contracts' => $query->paginate(12),
-            'employees' => $user->isManager() ? Employee::orderBy('name')->get() : collect(),
+            'employees' => $canManageContracts ? Employee::orderBy('name')->get() : collect(),
             'types'     => Contract::TYPES,
         ]);
     }

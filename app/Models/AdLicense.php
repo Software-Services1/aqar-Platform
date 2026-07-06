@@ -62,9 +62,17 @@ class AdLicense extends Model
         return count($this->platforms ?? []);
     }
 
+    /** أسماء المنصات النشطة — مُخزّنة مؤقتاً خلال الطلب لتفادي استعلامات N+1 */
+    protected static ?array $activeNamesMemo = null;
+
     public static function activePlatformNames(): array
     {
-        return Platform::active()->pluck('name')->all();
+        return static::$activeNamesMemo ??= Platform::active()->pluck('name')->all();
+    }
+
+    public static function clearActivePlatformNamesCache(): void
+    {
+        static::$activeNamesMemo = null;
     }
 
     public function getIsFullyPublishedAttribute(): bool
