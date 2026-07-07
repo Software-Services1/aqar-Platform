@@ -75,10 +75,10 @@ class NotificationService
         }
     }
 
-    /** عقد بلا ترخيص → تذكير الموظف المسؤول (مرة كل 24 ساعة) */
+    /** عقد بلا ترخيص → تذكير منشئ العقد (مرة كل 24 ساعة) */
     public function missingLicense(Contract $contract): void
     {
-        $employee = $contract->employee;
+        $employee = $contract->creator;
         if (! $employee) {
             return;
         }

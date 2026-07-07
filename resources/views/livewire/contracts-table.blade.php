@@ -28,16 +28,12 @@
                 @endforeach
             </select>
 
-            @if ($employees->isNotEmpty())
-                <select wire:model.live="employee" class="rounded-xl border border-ink/10 bg-white py-2.5 px-3 text-sm outline-none focus:border-brass">
-                    <option value="">كل المسؤولين</option>
-                    @foreach ($employees as $emp)
-                        <option value="{{ $emp->id }}">{{ $emp->name }}</option>
-                    @endforeach
-                </select>
+            @if ($canManageContracts)
+                <input type="text" wire:model.live.debounce.300ms="responsible" placeholder="اسم المسؤول…"
+                       class="w-40 rounded-xl border border-ink/10 bg-white py-2.5 px-3 text-sm outline-none focus:border-brass">
             @endif
 
-            @if ($search || $state || $type || $employee)
+            @if ($search || $state || $type || $responsible)
                 <button wire:click="clearFilters" class="rounded-xl px-3 py-2.5 text-sm font-medium text-ink-muted hover:text-danger">مسح الفلاتر ✕</button>
             @endif
 
@@ -79,7 +75,7 @@
                                 <p class="text-[12px] text-ink-muted">{{ $c->developer_name }}@if($c->neighborhood) · {{ $c->neighborhood }}@endif</p>
                             </td>
                             <td class="px-3 py-3 text-[12px] text-ink-muted">{{ $c->type_label }}<span class="mx-1 text-ink/20">·</span>{{ $c->transaction_label }}</td>
-                            <td class="px-3 py-3 text-ink-muted">{{ $c->employee?->name ?: '—' }}</td>
+                            <td class="px-3 py-3 text-ink-muted">{{ $c->responsible_name ?: '—' }}</td>
                             <td class="px-3 py-3 tabular-nums text-ink-muted">{{ $c->end_date->format('Y-m-d') }}</td>
                             <td class="px-3 py-3">
                                 @if ($c->days_remaining < 0)

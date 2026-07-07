@@ -26,6 +26,7 @@ class ReportController extends Controller
             'employees'        => Employee::orderBy('name')->get(),
             'representatives'  => Representative::orderBy('name')->get(),
             'externalCompanies' => ExternalCompany::orderBy('name')->get(),
+            'responsibles'     => Contract::whereNotNull('responsible_name')->distinct()->orderBy('responsible_name')->pluck('responsible_name'),
             'neighborhoods'    => Contract::whereNotNull('neighborhood')->distinct()->orderBy('neighborhood')->pluck('neighborhood'),
             'types'            => Contract::TYPES,
             'transactionTypes' => Contract::TRANSACTION_TYPES,
@@ -55,7 +56,7 @@ class ReportController extends Controller
         $filters = [
             'from'                => $request->input('from'),
             'to'                  => $request->input('to'),
-            'employee_id'         => $request->input('employee_id'),
+            'responsible'         => $request->input('responsible'),
             'representative_id'   => $request->input('representative_id'),
             'external_company_id' => $request->input('external_company_id'),
             'neighborhood'        => $request->input('neighborhood'),
@@ -66,16 +67,19 @@ class ReportController extends Controller
         ];
 
         $query = Contract::query()
-            ->with(['employee', 'representative', 'externalCompany', 'licenses'])
+            ->with(['representative', 'externalCompany', 'licenses'])
             ->betweenDates($filters['from'], $filters['to'])
             ->ofType($filters['contract_type'])
             ->ofTransaction($filters['transaction_type'])
             ->inNeighborhood($filters['neighborhood']);
 
-        foreach (['employee_id', 'representative_id', 'external_company_id'] as $col) {
+        foreach (['representative_id', 'external_company_id'] as $col) {
             if ($filters[$col]) {
                 $query->where($col, $filters[$col]);
             }
+        }
+        if ($filters['responsible']) {
+            $query->where('responsible_name', $filters['responsible']);
         }
         if ($filters['status']) {
             $query->where('approval_status', $filters['status']);

@@ -106,11 +106,11 @@
             <div><label class="lbl">من تاريخ</label><input type="date" name="from" value="{{ $filters['from'] }}" class="inp"></div>
             <div><label class="lbl">إلى تاريخ</label><input type="date" name="to" value="{{ $filters['to'] }}" class="inp"></div>
             <div>
-                <label class="lbl">الموظف المسؤول</label>
-                <select name="employee_id" class="inp">
+                <label class="lbl">المسؤول عن العقد</label>
+                <select name="responsible" class="inp">
                     <option value="">الكل</option>
-                    @foreach ($employees as $emp)
-                        <option value="{{ $emp->id }}" @selected($filters['employee_id'] == $emp->id)>{{ $emp->name }}</option>
+                    @foreach ($responsibles as $name)
+                        <option value="{{ $name }}" @selected($filters['responsible'] === $name)>{{ $name }}</option>
                     @endforeach
                 </select>
             </div>
@@ -212,7 +212,7 @@
                             <td class="px-3 py-3 font-semibold text-ink">{{ $c->project_name }}@if($c->externalCompany)<span class="block text-[11px] font-normal text-ink-muted">{{ $c->externalCompany->name }}</span>@endif</td>
                             <td class="px-3 py-3 text-ink-muted">{{ $c->type_label }} · {{ $c->transaction_label }}</td>
                             <td class="px-3 py-3 text-ink-muted">{{ $c->neighborhood ?: '—' }}</td>
-                            <td class="px-3 py-3 text-ink-muted">{{ $c->employee?->name ?: '—' }}</td>
+                            <td class="px-3 py-3 text-ink-muted">{{ $c->responsible_name ?: '—' }}</td>
                             <td class="px-3 py-3 text-ink-muted">{{ $c->representative?->name ?: '—' }}</td>
                             <td class="px-3 py-3 tabular-nums text-ink-muted">{{ $c->end_date->format('Y-m-d') }}</td>
                             <td class="px-3 py-3 text-[12px] font-semibold {{ $pmap[$c->publish_summary][1] }}">{{ $pmap[$c->publish_summary][0] }}</td>

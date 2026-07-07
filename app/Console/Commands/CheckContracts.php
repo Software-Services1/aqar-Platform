@@ -38,26 +38,28 @@ class CheckContracts extends Command
         }
         $this->info("تم فحص {$soon->count()} ترخيص قريب من الانتهاء.");
 
-        // 4) فجوات الترخيص/النشر: عقود معتمدة بلا ترخيص أو غير منشورة بالكامل
+        // 4) فجوات الترخيص/النشر
         $activeCount = Platform::active()->count();
+        $missing = 0;
         $gaps = 0;
-        Contract::with(['licenses', 'employee'])->approved()->chunk(100, function ($contracts) use ($notifications, $activeCount, &$gaps) {
+
+        // عقود معتمدة بلا أي ترخيص → تذكير منشئ العقد
+        Contract::approved()->doesntHave('licenses')->with('creator')->chunk(100, function ($contracts) use ($notifications, &$missing) {
             foreach ($contracts as $contract) {
-                $emp = $contract->employee;
-                if (! $emp) {
-                    continue;
-                }
-                $license = $contract->licenses->firstWhere('employee_id', $emp->id);
-                if (! $license) {
-                    $notifications->missingLicense($contract);
-                    $gaps++;
-                } elseif ($license->publish_state !== 'full') {
-                    $notifications->publishGap($license, $activeCount);
-                    $gaps++;
-                }
+                $notifications->missingLicense($contract);
+                $missing++;
             }
         });
-        $this->info("تم إرسال {$gaps} تنبيه فجوة ترخيص/نشر.");
+
+        // تراخيص غير منشورة بالكامل → تنبيه منشئ الترخيص
+        AdLicense::notFullyPublished($activeCount)->with(['employee', 'contract'])->chunk(100, function ($licenses) use ($notifications, $activeCount, &$gaps) {
+            foreach ($licenses as $license) {
+                $notifications->publishGap($license, $activeCount);
+                $gaps++;
+            }
+        });
+
+        $this->info("تنبيهات: {$missing} عقد بلا ترخيص، {$gaps} ترخيص غير منشور بالكامل.");
 
         return self::SUCCESS;
     }

@@ -5,8 +5,7 @@
     <title>تسجيل الدخول · {{ config('app.name', 'سهل') }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config={theme:{extend:{fontFamily:{sans:['"IBM Plex Sans Arabic"','sans-serif'],display:['Tajawal','sans-serif']},colors:{ink:'#1B2A41',brass:'#1499B0'}}}}</script>
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
 <body class="font-sans" style="background:#1B2A41">
 <div class="flex min-h-screen items-center justify-center p-4">

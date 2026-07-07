@@ -43,6 +43,7 @@ class DemoSeeder extends Seeder
             ['name' => 'عبدالله السبيعي', 'phone' => '0552222222'],
         ])->map(fn ($r) => Representative::firstOrCreate(['name' => $r['name']], $r));
 
+        $responsibles = ['أحمد الغامدي', 'محمد السالم', 'وليد الدوسري', 'سعود الشمري'];
         $allPlatforms = Platform::pluck('name')->values()->all();
         $mk = fn (array $names) => collect($names)->map(fn ($n) => [
             'name' => $n,
@@ -70,7 +71,8 @@ class DemoSeeder extends Seeder
                 'neighborhood'      => $hood,
                 'contract_type'     => $type,
                 'transaction_type'  => $deal,
-                'employee_id'       => $employees[$i % $employees->count()]->id,
+                'responsible_name'  => $responsibles[$i % count($responsibles)],
+                'responsible_phone' => '0561' . str_pad((string) $i, 6, '0', STR_PAD_LEFT),
                 'representative_id' => $reps[$i % $reps->count()]->id,
                 'created_by'        => $manager->id,
                 'start_date'        => now()->subDays(30),
@@ -96,7 +98,7 @@ class DemoSeeder extends Seeder
 
             if ($project === 'برج اللؤلؤة') {
                 AdLicense::create([
-                    'contract_id' => $contract->id, 'employee_id' => $contract->employee_id,
+                    'contract_id' => $contract->id, 'employee_id' => $employees[2]->id,
                     'license_number' => '72' . str_pad((string) ($i * 10 + 1), 5, '0', STR_PAD_LEFT),
                     'issue_date' => now()->subDays(2), 'expiry_date' => now()->addDays(30),
                     'platforms' => [], 'status' => 'created_unpublished',
@@ -118,7 +120,8 @@ class DemoSeeder extends Seeder
             'neighborhood'     => $first->neighborhood,
             'contract_type'    => $first->contract_type,
             'transaction_type' => $first->transaction_type,
-            'employee_id'      => $employees[0]->id,
+            'responsible_name' => 'مندوب الشركة الخارجية',
+            'responsible_phone' => '0569990000',
             'representative_id' => $first->representative_id,
             'created_by'       => $employees[0]->id,
             'parent_id'        => $first->id,

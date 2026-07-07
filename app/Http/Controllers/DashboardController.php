@@ -17,7 +17,10 @@ class DashboardController extends Controller
 
         $contracts = fn () => $isManager
             ? Contract::query()
-            : Contract::query()->where('employee_id', $user->id);
+            : Contract::query()->where(function ($q) use ($user) {
+                $q->where('created_by', $user->id)
+                  ->orWhereHas('licenses', fn ($l) => $l->where('employee_id', $user->id));
+            });
 
         $licenses = fn () => $isManager
             ? AdLicense::query()

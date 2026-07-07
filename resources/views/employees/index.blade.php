@@ -8,7 +8,7 @@
     <table class="w-full text-sm">
         <thead><tr class="border-b border-ink/8 text-right text-[12px] text-ink-muted">
             <th class="py-3 pr-5">الاسم</th><th class="px-3 py-3">البريد</th><th class="px-3 py-3">الجوال</th>
-            <th class="px-3 py-3">الدور</th><th class="px-3 py-3">الحالة</th><th class="px-3 py-3">عقود مسؤول عنها</th><th class="px-3 py-3"></th>
+            <th class="px-3 py-3">الدور</th><th class="px-3 py-3">الحالة</th><th class="px-3 py-3">عقود أنشأها</th><th class="px-3 py-3"></th>
         </tr></thead>
         <tbody class="divide-y divide-ink/5">
             @foreach ($employees as $emp)

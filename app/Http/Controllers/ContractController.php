@@ -40,7 +40,7 @@ class ContractController extends Controller
     {
         $this->authorizeView($contract);
 
-        $contract->load(['employee', 'representative', 'creator', 'licenses.employee', 'parent', 'subContracts', 'externalCompany']);
+        $contract->load(['representative', 'creator', 'licenses.employee', 'parent', 'subContracts', 'externalCompany']);
 
         // ترخيص الموظف الحالي لهذا العقد (إن وُجد)
         $myLicense = $contract->licenses->firstWhere('employee_id', auth()->id());
@@ -84,7 +84,7 @@ class ContractController extends Controller
         // نسخة غير محفوظة من بيانات العقد الأصل لملء النموذج (عدا رقم العقد)
         $prefill = new Contract($contract->only([
             'project_name', 'developer_name', 'developer_phone', 'neighborhood',
-            'contract_type', 'transaction_type', 'employee_id', 'representative_id',
+            'contract_type', 'transaction_type', 'responsible_name', 'responsible_phone', 'representative_id',
             'start_date', 'end_date', 'notes',
         ]));
         $prefill->approval_status = 'pending';
@@ -142,7 +142,8 @@ class ContractController extends Controller
             'neighborhood'      => ['nullable', 'string', 'max:120'],
             'contract_type'     => ['required', 'in:' . implode(',', array_keys(Contract::TYPES))],
             'transaction_type'  => ['required', 'in:' . implode(',', array_keys(Contract::TRANSACTION_TYPES))],
-            'employee_id'       => ['nullable', 'exists:employees,id'],
+            'responsible_name'  => ['nullable', 'string', 'max:255'],
+            'responsible_phone' => ['nullable', 'string', 'max:30'],
             'representative_id' => ['nullable', 'exists:representatives,id'],
             'start_date'        => ['required', 'date'],
             'end_date'          => ['required', 'date', 'after_or_equal:start_date'],
@@ -156,7 +157,6 @@ class ContractController extends Controller
     private function formData(): array
     {
         return [
-            'employees'        => Employee::orderBy('name')->get(),
             'representatives'  => Representative::active()->orderBy('name')->get(),
             'types'            => Contract::TYPES,
             'transactionTypes' => Contract::TRANSACTION_TYPES,
@@ -174,8 +174,8 @@ class ContractController extends Controller
             $user->isManager()
             || $user->can('manage-contracts')
             || $contract->approval_status === 'approved'
-            || $contract->employee_id === $user->id
-            || $contract->created_by === $user->id,
+            || $contract->created_by === $user->id
+            || $contract->licenses()->where('employee_id', $user->id)->exists(),
             403
         );
     }

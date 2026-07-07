@@ -10,39 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['"IBM Plex Sans Arabic"', 'sans-serif'],
-                        display: ['Tajawal', 'sans-serif'],
-                    },
-                    colors: {
-                        ink:    { DEFAULT: '#1B2A41', soft: '#22324d', muted: '#5b6b85' },
-                        paper:  '#F1F5F7',
-                        brass:  { DEFAULT: '#1499B0', soft: '#8AD7E4', dim: '#e2f4f7' },
-                        ok:     '#16a34a',
-                        warn:   '#d97706',
-                        danger: '#dc2626',
-                        gone:   '#6b7280',
-                    },
-                    boxShadow: {
-                        card: '0 1px 2px rgba(27,42,65,.06), 0 8px 24px -12px rgba(27,42,65,.18)',
-                    },
-                },
-            },
-        };
-    </script>
-    <style>
-        body { background:#F7F5F0; }
-        .nav-link.active { background: rgba(196,154,91,.16); color:#fff; }
-        .nav-link.active .ico { color:#C49A5B; }
-        ::-webkit-scrollbar { width:10px; height:10px; }
-        ::-webkit-scrollbar-thumb { background:#cfc8ba; border-radius:99px; }
-        [x-cloak]{ display:none !important; }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     @livewireStyles
 </head>
 <body class="font-sans text-ink antialiased">

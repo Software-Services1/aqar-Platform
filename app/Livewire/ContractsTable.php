@@ -3,7 +3,6 @@
 namespace App\Livewire;
 
 use App\Models\Contract;
-use App\Models\Employee;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -22,7 +21,7 @@ class ContractsTable extends Component
     public string $type = '';       // exclusive | brokerage | marketing
 
     #[Url]
-    public string $employee = '';   // فلترة حسب المسؤول (للمدير)
+    public string $responsible = '';   // فلترة حسب اسم المسؤول (نص حر)
 
     #[Url]
     public string $sort = 'end_date';
@@ -31,7 +30,7 @@ class ContractsTable extends Component
 
     public function updating($name): void
     {
-        if (in_array($name, ['search', 'state', 'type', 'employee'])) {
+        if (in_array($name, ['search', 'state', 'type', 'responsible'])) {
             $this->resetPage();
         }
     }
@@ -48,7 +47,7 @@ class ContractsTable extends Component
 
     public function clearFilters(): void
     {
-        $this->reset(['search', 'state', 'type', 'employee']);
+        $this->reset(['search', 'state', 'type', 'responsible']);
         $this->resetPage();
     }
 
@@ -57,13 +56,16 @@ class ContractsTable extends Component
         $user = auth()->user();
         $canManageContracts = $user->isManager() || $user->can('manage-contracts');
 
-        $query = Contract::query()->with(['employee', 'representative', 'licenses']);
+        $query = Contract::query()->with(['representative', 'licenses']);
 
         // الموظف العادي يرى العقود المعتمدة فقط؛ صاحب صلاحية إدارة العقود يرى الجميع بكل الحالات
         if (! $canManageContracts) {
             $query->approved();
-        } elseif ($this->employee !== '') {
-            $query->where('employee_id', $this->employee);
+        }
+
+        // فلترة باسم المسؤول (نص حر)
+        if ($this->responsible !== '') {
+            $query->where('responsible_name', 'like', "%{$this->responsible}%");
         }
 
         $query->search($this->search)->ofType($this->type ?: null);
@@ -87,9 +89,9 @@ class ContractsTable extends Component
         $query->orderBy($sort, $this->dir === 'desc' ? 'desc' : 'asc');
 
         return view('livewire.contracts-table', [
-            'contracts' => $query->paginate(12),
-            'employees' => $canManageContracts ? Employee::orderBy('name')->get() : collect(),
-            'types'     => Contract::TYPES,
+            'contracts'         => $query->paginate(12),
+            'canManageContracts' => $canManageContracts,
+            'types'             => Contract::TYPES,
         ]);
     }
 }

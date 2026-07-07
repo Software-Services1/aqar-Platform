@@ -30,14 +30,8 @@ class Employee extends Authenticatable
         ];
     }
 
-    /** العقود التي يكون الموظف مسؤولاً عنها */
+    /** العقود التي أنشأها الموظف/المستخدم */
     public function contracts(): HasMany
-    {
-        return $this->hasMany(Contract::class, 'employee_id');
-    }
-
-    /** العقود التي أنشأها (كمشرف) */
-    public function createdContracts(): HasMany
     {
         return $this->hasMany(Contract::class, 'created_by');
     }

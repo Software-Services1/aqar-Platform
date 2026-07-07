@@ -14,7 +14,7 @@ class Contract extends Model
 
     protected $fillable = [
         'contract_number', 'project_name', 'developer_name', 'developer_phone',
-        'neighborhood', 'contract_type', 'transaction_type', 'employee_id', 'representative_id',
+        'neighborhood', 'contract_type', 'transaction_type', 'responsible_name', 'responsible_phone', 'representative_id',
         'created_by', 'parent_id', 'external_company_id', 'start_date', 'end_date', 'approval_status', 'notes',
     ];
 
@@ -46,11 +46,6 @@ class Contract extends Model
     ];
 
     /* ----------------------- العلاقات ----------------------- */
-
-    public function employee(): BelongsTo
-    {
-        return $this->belongsTo(Employee::class, 'employee_id');
-    }
 
     public function representative(): BelongsTo
     {
@@ -207,11 +202,6 @@ class Contract extends Model
     {
         return $q->has('licenses')
                  ->whereDoesntHave('licenses', fn ($l) => $l->where('platform_count', '<', max($activeCount, 1)));
-    }
-
-    public function scopeForEmployee(Builder $q, int $employeeId): Builder
-    {
-        return $q->where('employee_id', $employeeId);
     }
 
     public function scopeOfType(Builder $q, ?string $type): Builder

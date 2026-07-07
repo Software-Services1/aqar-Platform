@@ -28,8 +28,9 @@ return new class extends Migration
             // الشركة الخارجية (للعقود الفرعية)
             $table->unsignedBigInteger('external_company_id')->nullable();
 
-            // المسؤول عن العقد (موظف)
-            $table->foreignId('employee_id')->nullable()->constrained('employees')->nullOnDelete();
+            // المسؤول عن العقد (اسم حر — قد لا يكون مستخدماً في النظام)
+            $table->string('responsible_name')->nullable();
+            $table->string('responsible_phone')->nullable();
             // المندوب
             $table->foreignId('representative_id')->nullable()->constrained('representatives')->nullOnDelete();
             // منشئ العقد (المشرف/المدير) — قد لا يكون معنيّاً بالتراخيص

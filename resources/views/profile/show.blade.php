@@ -32,7 +32,7 @@
 
     <div class="grid gap-4 sm:grid-cols-2">
         <div class="rounded-2xl bg-white p-5 shadow-card">
-            <p class="text-[12px] text-ink-muted">عقود مسؤول عنها</p>
+            <p class="text-[12px] text-ink-muted">عقود أنشأتها</p>
             <p class="mt-1 font-display text-3xl font-bold text-ink">{{ $user->contracts_count }}</p>
         </div>
         <div class="rounded-2xl bg-white p-5 shadow-card">

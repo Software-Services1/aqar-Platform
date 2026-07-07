@@ -44,13 +44,13 @@
     </div>
     <div>
         <label class="lbl">المسؤول عن العقد</label>
-        <select name="employee_id" class="inp">
-            <option value="">— غير محدد —</option>
-            @foreach ($employees as $emp)
-                <option value="{{ $emp->id }}" @selected(old('employee_id', $c?->employee_id) == $emp->id)>{{ $emp->name }}</option>
-            @endforeach
-        </select>
-        @error('employee_id')<p class="err">{{ $message }}</p>@enderror
+        <input name="responsible_name" value="{{ old('responsible_name', $c?->responsible_name) }}" class="inp" placeholder="اسم المسؤول (قد لا يكون موظفاً بالنظام)">
+        @error('responsible_name')<p class="err">{{ $message }}</p>@enderror
+    </div>
+    <div>
+        <label class="lbl">جوال المسؤول</label>
+        <input name="responsible_phone" value="{{ old('responsible_phone', $c?->responsible_phone) }}" class="inp" dir="ltr" placeholder="05xxxxxxxx">
+        @error('responsible_phone')<p class="err">{{ $message }}</p>@enderror
     </div>
     <div>
         <label class="lbl">المندوب</label>
