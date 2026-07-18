@@ -7,6 +7,7 @@ $map = [
   'finished'  => ['منتهي', 'text-teal-600 bg-teal-50 ring-teal-200'],
   'expired'   => ['انتهت دون موافقة', 'text-gone bg-gone/10 ring-gone/20'],
   'cancelled' => ['ملغي', 'text-purple-600 bg-purple-50 ring-purple-200'],
+  'draft'     => ['مسودة', 'text-amber-700 bg-amber-50 ring-amber-200'],
 ];
 [$label, $cls] = $map[$state] ?? ['—', 'text-ink-muted bg-ink/5 ring-ink/10'];
 @endphp

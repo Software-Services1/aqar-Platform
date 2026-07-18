@@ -58,9 +58,10 @@ class ContractsTable extends Component
 
         $query = Contract::query()->with(['representative', 'licenses']);
 
-        // الموظف العادي يرى العقود المعتمدة فقط؛ صاحب صلاحية إدارة العقود يرى الجميع بكل الحالات
+        // الموظف العادي: يرى ما أنشأه + العقود المعتمدة/المنتهية المصرّح له برؤيتها فقط
+        // (تُخفى العقود بانتظار الموافقة/الملغاة/المنتهية دون موافقة والمسودّات)
         if (! $canManageContracts) {
-            $query->approved();
+            $query->visibleToEmployee($user->id);
         }
 
         // فلترة باسم المسؤول (نص حر)
@@ -81,6 +82,7 @@ class ContractsTable extends Component
             'cancelled'   => $query->cancelled(),
             'no_license'  => $query->withoutLicense(),
             'unpublished' => $query->notFullyPublished($activeCount),
+            'draft'       => $query->draft(),
             default       => null,
         };
 

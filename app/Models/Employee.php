@@ -42,6 +42,28 @@ class Employee extends Authenticatable
         return $this->hasMany(AdLicense::class);
     }
 
+    /** العقود المصرّح له برؤيتها */
+    public function assignedContracts(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Contract::class, 'contract_employee');
+    }
+
+    public function messagesSent(): HasMany
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    public function messagesReceived(): HasMany
+    {
+        return $this->hasMany(Message::class, 'receiver_id');
+    }
+
+    /** عدد الرسائل غير المقروءة */
+    public function unreadMessagesCount(): int
+    {
+        return $this->messagesReceived()->whereNull('read_at')->count();
+    }
+
     public function notifications(): HasMany
     {
         return $this->hasMany(AppNotification::class)->latest();

@@ -15,7 +15,7 @@ class Contract extends Model
     protected $fillable = [
         'contract_number', 'project_name', 'developer_name', 'developer_phone',
         'neighborhood', 'contract_type', 'transaction_type', 'responsible_name', 'responsible_phone', 'representative_id',
-        'created_by', 'parent_id', 'external_company_id', 'start_date', 'end_date', 'approval_status', 'notes',
+        'created_by', 'parent_id', 'external_company_id', 'start_date', 'end_date', 'approval_status', 'is_draft', 'notes',
     ];
 
     protected function casts(): array
@@ -23,6 +23,7 @@ class Contract extends Model
         return [
             'start_date' => 'date',
             'end_date'   => 'date',
+            'is_draft'   => 'boolean',
         ];
     }
 
@@ -68,6 +69,12 @@ class Contract extends Model
         return $this->hasMany(AdLicense::class);
     }
 
+    /** الموظفون المصرّح لهم برؤية العقد */
+    public function assignedEmployees(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Employee::class, 'contract_employee');
+    }
+
     /** العقد الأصل (إن كان هذا عقداً فرعياً) */
     public function parent(): BelongsTo
     {
@@ -82,8 +89,11 @@ class Contract extends Model
 
     /* ----------------------- الحسابات ----------------------- */
 
-    public function getDaysRemainingAttribute(): int
+    public function getDaysRemainingAttribute(): ?int
     {
+        if (! $this->end_date) {
+            return null;
+        }
         return (int) now()->startOfDay()->diffInDays($this->end_date->startOfDay(), false);
     }
 
@@ -98,6 +108,7 @@ class Contract extends Model
         $days = (int) Setting::get('alert_days', 7);
 
         return $this->approval_status === 'approved'
+            && $this->days_remaining !== null
             && $this->days_remaining >= 0
             && $this->days_remaining < $days;
     }
@@ -128,12 +139,16 @@ class Contract extends Model
      */
     public function getVisualStateAttribute(): string
     {
+        if ($this->is_draft) {
+            return 'draft';
+        }
+        $dr = $this->days_remaining;
         return match ($this->approval_status) {
             'cancelled' => 'cancelled',
             'expired'   => 'expired',
             'finished'  => 'finished',
-            'pending'   => $this->days_remaining < 0 ? 'expired' : 'pending',
-            default     => $this->days_remaining < 0
+            'pending'   => ($dr !== null && $dr < 0) ? 'expired' : 'pending',
+            default     => ($dr !== null && $dr < 0)
                 ? 'expired'
                 : ($this->is_expiring_soon ? 'expiring' : 'active'),
         };
@@ -157,6 +172,29 @@ class Contract extends Model
 
     public function scopeApproved(Builder $q): Builder { return $q->where('approval_status', 'approved'); }
     public function scopePending(Builder $q): Builder { return $q->where('approval_status', 'pending'); }
+    public function scopeDraft(Builder $q): Builder { return $q->where('is_draft', true); }
+
+    /**
+     * العقود التي يُسمح للموظف (غير المدير) برؤيتها:
+     * - ما أنشأه بنفسه، أو
+     * - عقود «تمت الموافقة/منتهية» فقط (تُخفى: بانتظار الموافقة، ملغي، انتهت دون موافقة)
+     *   وهو مصرّح له برؤيتها (مُسنَد إليه/له ترخيص عليها/غير مُسنَدة لأحد).
+     * المسودّات مستثناة دائماً.
+     */
+    public function scopeVisibleToEmployee(Builder $q, int $employeeId): Builder
+    {
+        return $q->where('is_draft', false)->where(function ($w) use ($employeeId) {
+            $w->where('created_by', $employeeId)
+              ->orWhere(function ($v) use ($employeeId) {
+                  $v->whereIn('approval_status', ['approved', 'finished'])
+                    ->where(function ($x) use ($employeeId) {
+                        $x->whereHas('assignedEmployees', fn ($e) => $e->whereKey($employeeId))
+                          ->orWhereHas('licenses', fn ($l) => $l->where('employee_id', $employeeId))
+                          ->orWhereDoesntHave('assignedEmployees');
+                    });
+              });
+        });
+    }
     public function scopeCancelled(Builder $q): Builder { return $q->where('approval_status', 'cancelled'); }
     public function scopeFinished(Builder $q): Builder { return $q->where('approval_status', 'finished'); }
 

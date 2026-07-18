@@ -96,38 +96,69 @@ $cards = [
 </div>
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{{-- تحميل مؤجّل وكسول: لا تُحمَّل مكتبة الرسوم إلا عند اقتراب المخططات من الشاشة --}}
 <script>
-    const grid = 'rgba(27,42,65,.07)';
-    Chart.defaults.font.family = 'IBM Plex Sans Arabic';
-    Chart.defaults.color = '#5b6b85';
+(() => {
+    const build = () => {
+        const grid = 'rgba(27,42,65,.07)';
+        Chart.defaults.font.family = 'IBM Plex Sans Arabic';
+        Chart.defaults.color = '#5b6b85';
+        Chart.defaults.animation.duration = 500;
 
-    new Chart(document.getElementById('monthlyChart'), {
-        type: 'line',
-        data: { labels: @json($monthlyChart['labels']),
-            datasets: [{ data: @json($monthlyChart['data']),
-                borderColor: '#1499B0', backgroundColor: 'rgba(20,153,176,.12)',
-                fill: true, tension: .4, pointRadius: 4, pointBackgroundColor: '#1499B0', borderWidth: 2.5 }] },
-        options: { plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, grid: { color: grid }, ticks: { precision: 0 } }, x: { grid: { display: false } } } },
-    });
+        const el = id => document.getElementById(id);
 
-    new Chart(document.getElementById('statusChart'), {
-        type: 'doughnut',
-        data: { labels: @json($statusChart['labels']),
-            datasets: [{ data: @json($statusChart['data']),
-                backgroundColor: ['#2563eb', '#16a34a', '#0d9488', '#6b7280', '#9333ea'], borderWidth: 0 }] },
-        options: { cutout: '64%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12, font: { size: 11 } } } } },
-    });
+        if (el('monthlyChart')) new Chart(el('monthlyChart'), {
+            type: 'line',
+            data: { labels: @json($monthlyChart['labels']),
+                datasets: [{ data: @json($monthlyChart['data']),
+                    borderColor: '#1499B0', backgroundColor: 'rgba(20,153,176,.12)',
+                    fill: true, tension: .4, pointRadius: 4, pointBackgroundColor: '#1499B0', borderWidth: 2.5 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, grid: { color: grid }, ticks: { precision: 0 } }, x: { grid: { display: false } } } },
+        });
 
-    new Chart(document.getElementById('platformChart'), {
-        type: 'bar',
-        data: { labels: @json($platformChart['labels']),
-            datasets: [{ data: @json($platformChart['data']),
-                backgroundColor: '#1B2A41', borderRadius: 6, barThickness: 26 }] },
-        options: { plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, grid: { color: grid }, ticks: { precision: 0 } }, x: { grid: { display: false } } } },
-    });
+        if (el('statusChart')) new Chart(el('statusChart'), {
+            type: 'doughnut',
+            data: { labels: @json($statusChart['labels']),
+                datasets: [{ data: @json($statusChart['data']),
+                    backgroundColor: ['#2563eb', '#16a34a', '#0d9488', '#6b7280', '#9333ea'], borderWidth: 0 }] },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '64%',
+                plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12, font: { size: 11 } } } } },
+        });
+
+        if (el('platformChart')) new Chart(el('platformChart'), {
+            type: 'bar',
+            data: { labels: @json($platformChart['labels']),
+                datasets: [{ data: @json($platformChart['data']),
+                    backgroundColor: '#1B2A41', borderRadius: 6, barThickness: 26 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, grid: { color: grid }, ticks: { precision: 0 } }, x: { grid: { display: false } } } },
+        });
+    };
+
+    const load = () => {
+        // المكتبة محمّلة من زيارة سابقة (تنقّل بلا إعادة تحميل) → ابنِ مباشرةً
+        if (window.Chart) { build(); return; }
+        if (window.__chartLoading) return;
+        window.__chartLoading = true;
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
+        s.onload = build;
+        document.head.appendChild(s);
+    };
+
+    const anchor = document.getElementById('monthlyChart') || document.getElementById('statusChart');
+    if (!anchor) return;
+
+    if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((entries) => {
+            if (entries.some(e => e.isIntersecting)) { io.disconnect(); load(); }
+        }, { rootMargin: '200px' });
+        io.observe(anchor);
+    } else {
+        load();
+    }
+})();
 </script>
 @endpush
 @endsection

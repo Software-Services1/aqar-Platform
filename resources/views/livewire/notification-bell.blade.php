@@ -1,4 +1,4 @@
-<div class="relative" x-data="{ open: @entangle('open') }" wire:poll.30s="refreshCount">
+<div class="relative" x-data="{ open: @entangle('open') }" wire:poll.30s.visible="refreshCount">
     <button wire:click="toggle" @click.away="open = false"
             class="relative grid h-10 w-10 place-items-center rounded-full bg-white shadow-card text-ink hover:bg-paper">
         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1112 0c0 7 3 7 3 9H3c0-2 3-2 3-9M9 21a3 3 0 006 0"/></svg>

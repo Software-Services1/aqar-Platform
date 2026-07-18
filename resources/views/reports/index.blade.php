@@ -214,7 +214,7 @@
                             <td class="px-3 py-3 text-ink-muted">{{ $c->neighborhood ?: '—' }}</td>
                             <td class="px-3 py-3 text-ink-muted">{{ $c->responsible_name ?: '—' }}</td>
                             <td class="px-3 py-3 text-ink-muted">{{ $c->representative?->name ?: '—' }}</td>
-                            <td class="px-3 py-3 tabular-nums text-ink-muted">{{ $c->end_date->format('Y-m-d') }}</td>
+                            <td class="px-3 py-3 tabular-nums text-ink-muted">{{ optional($c->end_date)->format('Y-m-d') ?: '—' }}</td>
                             <td class="px-3 py-3 text-[12px] font-semibold {{ $pmap[$c->publish_summary][1] }}">{{ $pmap[$c->publish_summary][0] }}</td>
                             <td class="px-3 py-3"><x-status-pill :state="$c->visual_state" /></td>
                         </tr>
@@ -228,5 +228,4 @@
     </div>
 @endif
 
-<style>.lbl{display:block;margin-bottom:.35rem;font-size:.78rem;font-weight:600;color:#22324d}.inp{width:100%;border:1px solid rgba(27,42,65,.12);border-radius:.75rem;padding:.55rem .7rem;font-size:.85rem;outline:none}.inp:focus{border-color:#1499B0;box-shadow:0 0 0 3px rgba(20,153,176,.15)}</style>
 @endsection

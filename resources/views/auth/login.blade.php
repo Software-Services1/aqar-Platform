@@ -27,20 +27,27 @@
             @csrf
             <div>
                 <label class="mb-1.5 block text-sm font-medium text-ink">البريد الإلكتروني</label>
-                <input name="email" type="email" value="{{ old('email') }}" required autofocus
+                <input name="email" type="email" value="{{ old('email') }}" required autofocus autocomplete="username" inputmode="email" dir="ltr"
                        class="w-full rounded-xl border border-ink/15 px-3 py-2.5 text-sm outline-none focus:border-brass focus:ring-2 focus:ring-brass/20">
             </div>
             <div>
                 <label class="mb-1.5 block text-sm font-medium text-ink">كلمة المرور</label>
-                <input name="password" type="password" required
+                <input name="password" type="password" required autocomplete="current-password" dir="ltr"
                        class="w-full rounded-xl border border-ink/15 px-3 py-2.5 text-sm outline-none focus:border-brass focus:ring-2 focus:ring-brass/20">
             </div>
             @error('email')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
             <label class="flex items-center gap-2 text-sm text-ink/70"><input type="checkbox" name="remember" class="rounded"> تذكّرني</label>
-            <button class="w-full rounded-xl bg-ink py-2.5 font-semibold text-white transition hover:bg-brass">دخول</button>
+            <button type="submit" data-submit class="w-full rounded-xl bg-ink py-2.5 font-semibold text-white transition hover:bg-brass disabled:opacity-70">دخول</button>
         </form>
         <p class="mt-4 text-center text-xs text-white/40">حساب تجريبي: manager@example.com / password</p>
     </div>
 </div>
+<script>
+    // منع الإرسال المزدوج في استمارة الدخول
+    document.querySelector('form')?.addEventListener('submit', (e) => {
+        const b = e.target.querySelector('[data-submit]');
+        if (b) { b.disabled = true; b.textContent = 'جارٍ الدخول…'; }
+    });
+</script>
 </body>
 </html>

@@ -11,11 +11,11 @@ return new class extends Migration
         Schema::create('contracts', function (Blueprint $table) {
             $table->id();
 
-            // رقم العقد يبدأ بـ 62 ويُولَّد تلقائياً
-            $table->string('contract_number')->unique();
+            // رقم العقد (من منصة أخرى) — قد يكون فارغاً في المسودة
+            $table->string('contract_number')->nullable()->unique();
 
-            $table->string('project_name');
-            $table->string('developer_name');
+            $table->string('project_name')->nullable();
+            $table->string('developer_name')->nullable();
             $table->string('developer_phone')->nullable();
             $table->string('neighborhood')->nullable();          // الحي (لفلاتر التقارير)
 
@@ -36,11 +36,13 @@ return new class extends Migration
             // منشئ العقد (المشرف/المدير) — قد لا يكون معنيّاً بالتراخيص
             $table->foreignId('created_by')->nullable()->constrained('employees')->nullOnDelete();
 
-            $table->date('start_date');
-            $table->date('end_date');
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
 
             // حالة العقد: انتظار الموافقة | تمت الموافقة | انتهت المدة دون موافقة | ملغي
             $table->enum('approval_status', ['pending', 'approved', 'finished', 'expired', 'cancelled'])->default('pending');
+            // مسودة: العقد ناقص البيانات
+            $table->boolean('is_draft')->default(false);
 
             $table->text('notes')->nullable();
             $table->timestamps();
@@ -52,6 +54,7 @@ return new class extends Migration
             $table->index('parent_id');
             $table->index('external_company_id');
             $table->index('transaction_type');
+            $table->index('is_draft');
         });
     }
 

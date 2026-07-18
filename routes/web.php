@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PlatformController;
 use App\Http\Controllers\ProfileController;
@@ -49,6 +50,9 @@ Route::middleware('auth')->group(function () {
 
     // التقارير
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+
+    // الرسائل بين الموظفين
+    Route::get('messages', [MessageController::class, 'index'])->name('messages.index');
 
     // الإدارة (محميّة بالصلاحيات داخل المتحكمات)
     Route::resource('employees', EmployeeController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);

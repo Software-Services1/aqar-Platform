@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Contract;
 use App\Models\Employee;
 use App\Models\Representative;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
@@ -26,21 +27,37 @@ class ContractController extends Controller
     {
         Gate::authorize('manage-contracts');
 
-        $data = $this->validateContract($request);
+        $draft = $request->boolean('save_as_draft');
+        $data = $this->validateContract($request, null, $draft);
         $data['created_by'] = auth()->id();
+        $data['is_draft']   = $draft;
 
+        // المسودة قد تكون بلا عنوان → عنوان مؤقت للعرض في القوائم
+        if (empty($data['project_name'])) {
+            $data['project_name'] = 'مسودة بدون عنوان';
+        }
+
+        $request->validate(['assigned' => ['array'], 'assigned.*' => ['exists:employees,id']]);
         $contract = Contract::create($data);
+        $contract->assignedEmployees()->sync($request->input('assigned', []));
 
-        return redirect()
-            ->route('contracts.show', $contract)
-            ->with('success', "تم إنشاء العقد رقم {$contract->contract_number} وإشعار الموظفين.");
+        // إشعار الموظفين المصرّح لهم فقط عند اعتماد العقد (وليس مسودة/بانتظار الموافقة)
+        if (! $draft && $contract->approval_status === 'approved') {
+            app(NotificationService::class)->contractCreated($contract);
+        }
+
+        $msg = $draft
+            ? 'تم حفظ العقد كمسودة (بيانات ناقصة).'
+            : 'تم حفظ العقد.';
+
+        return redirect()->route('contracts.show', $contract)->with('success', $msg);
     }
 
     public function show(Contract $contract)
     {
         $this->authorizeView($contract);
 
-        $contract->load(['representative', 'creator', 'licenses.employee', 'parent', 'subContracts', 'externalCompany']);
+        $contract->load(['representative', 'creator', 'licenses.employee', 'parent', 'subContracts', 'externalCompany', 'assignedEmployees']);
 
         // ترخيص الموظف الحالي لهذا العقد (إن وُجد)
         $myLicense = $contract->licenses->firstWhere('employee_id', auth()->id());
@@ -59,11 +76,26 @@ class ContractController extends Controller
     {
         Gate::authorize('manage-contracts');
 
-        $contract->update($this->validateContract($request, $contract));
+        $wasApproved = $contract->approval_status === 'approved';
 
-        return redirect()
-            ->route('contracts.show', $contract)
-            ->with('success', 'تم تحديث العقد.');
+        $draft = $request->boolean('save_as_draft');
+        $data = $this->validateContract($request, $contract, $draft);
+        $data['is_draft'] = $draft;
+        if (empty($data['project_name'])) {
+            $data['project_name'] = 'مسودة بدون عنوان';
+        }
+
+        $request->validate(['assigned' => ['array'], 'assigned.*' => ['exists:employees,id']]);
+        $contract->update($data);
+        $contract->assignedEmployees()->sync($request->input('assigned', []));
+
+        // إشعار عند الانتقال إلى «تمت الموافقة» فقط
+        if (! $draft && $contract->approval_status === 'approved' && ! $wasApproved) {
+            app(NotificationService::class)->contractCreated($contract);
+        }
+
+        return redirect()->route('contracts.show', $contract)
+            ->with('success', $draft ? 'تم حفظ العقد كمسودة.' : 'تم تحديث العقد.');
     }
 
     public function destroy(Contract $contract)
@@ -130,14 +162,17 @@ class ContractController extends Controller
 
     /* ----------------------- مساعدات ----------------------- */
 
-    private function validateContract(Request $request, ?Contract $contract = null): array
+    private function validateContract(Request $request, ?Contract $contract = null, bool $draft = false): array
     {
         $unique = 'unique:contracts,contract_number' . ($contract ? ",{$contract->id}" : '');
 
+        // في المسودة: كل الحقول اختيارية عدا اسم المشروع (للتعريف)
+        $req = fn (array $rules) => $draft ? array_merge(['nullable'], array_slice($rules, 1)) : $rules;
+
         return $request->validate([
-            'contract_number'   => ['required', 'string', 'max:60', $unique],
-            'project_name'      => ['required', 'string', 'max:255'],
-            'developer_name'    => ['required', 'string', 'max:255'],
+            'contract_number'   => ['nullable', 'string', 'max:60', $unique],
+            'project_name'      => $req(['required', 'string', 'max:255']),
+            'developer_name'    => $req(['required', 'string', 'max:255']),
             'developer_phone'   => ['nullable', 'string', 'max:30'],
             'neighborhood'      => ['nullable', 'string', 'max:120'],
             'contract_type'     => ['required', 'in:' . implode(',', array_keys(Contract::TYPES))],
@@ -145,8 +180,8 @@ class ContractController extends Controller
             'responsible_name'  => ['nullable', 'string', 'max:255'],
             'responsible_phone' => ['nullable', 'string', 'max:30'],
             'representative_id' => ['nullable', 'exists:representatives,id'],
-            'start_date'        => ['required', 'date'],
-            'end_date'          => ['required', 'date', 'after_or_equal:start_date'],
+            'start_date'        => $req(['required', 'date']),
+            'end_date'          => $draft ? ['nullable', 'date'] : ['required', 'date', 'after_or_equal:start_date'],
             'approval_status'   => ['required', 'in:' . implode(',', array_keys(Contract::STATUSES))],
             'notes'             => ['nullable', 'string'],
         ], [
@@ -157,6 +192,7 @@ class ContractController extends Controller
     private function formData(): array
     {
         return [
+            'allEmployees'     => Employee::where('is_active', true)->orderBy('name')->get(),
             'representatives'  => Representative::active()->orderBy('name')->get(),
             'types'            => Contract::TYPES,
             'transactionTypes' => Contract::TRANSACTION_TYPES,
@@ -168,14 +204,12 @@ class ContractController extends Controller
     {
         $user = auth()->user();
 
-        // المدير أو صاحب صلاحية إدارة العقود يرى كل العقود بكل حالاتها؛
-        // الموظف العادي يرى المعتمدة (لإنشاء ترخيصه) أو ما هو مسؤول عنه
+        // المدير/صاحب صلاحية إدارة العقود يرى الكل؛ غيرهم وفق قاعدة رؤية الموظف
+        // (العقود بانتظار الموافقة/الملغاة/المنتهية دون موافقة لا تظهر للموظف)
         abort_unless(
             $user->isManager()
             || $user->can('manage-contracts')
-            || $contract->approval_status === 'approved'
-            || $contract->created_by === $user->id
-            || $contract->licenses()->where('employee_id', $user->id)->exists(),
+            || Contract::whereKey($contract->id)->visibleToEmployee($user->id)->exists(),
             403
         );
     }

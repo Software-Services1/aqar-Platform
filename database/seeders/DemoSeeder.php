@@ -130,5 +130,25 @@ class DemoSeeder extends Seeder
             'end_date'         => now()->addDays(50),
             'approval_status'  => 'pending',
         ]);
+
+        // إسناد الرؤية: العقد الأول يظهر لسارة وفهد
+        $first->assignedEmployees()->sync([$employees[0]->id, $employees[1]->id]);
+
+        // مثال عقد مسودة (بيانات ناقصة)
+        Contract::create([
+            'project_name'    => 'مشروع قيد الإدخال',
+            'contract_type'   => 'brokerage',
+            'transaction_type' => 'sale',
+            'approval_status' => 'pending',
+            'is_draft'        => true,
+            'created_by'      => $manager->id,
+        ]);
+
+        // رسائل تجريبية بين الموظفين
+        \App\Models\Message::insert([
+            ['sender_id' => $employees[0]->id, 'receiver_id' => $manager->id,      'body' => 'السلام عليكم، هل تم اعتماد عقد مشروع الواحة؟', 'read_at' => null, 'created_at' => now()->subMinutes(30), 'updated_at' => now()->subMinutes(30)],
+            ['sender_id' => $manager->id,      'receiver_id' => $employees[0]->id, 'body' => 'وعليكم السلام، نعم تم الاعتماد. باشري بالترخيص.',   'read_at' => now(), 'created_at' => now()->subMinutes(28), 'updated_at' => now()->subMinutes(28)],
+            ['sender_id' => $employees[1]->id, 'receiver_id' => $employees[0]->id, 'body' => 'أرسلي لي رقم الترخيص لو سمحتِ.', 'read_at' => null, 'created_at' => now()->subMinutes(10), 'updated_at' => now()->subMinutes(10)],
+        ]);
     }
 }

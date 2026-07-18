@@ -55,5 +55,4 @@
         </div>
     </form>
 </div>
-<style>.lbl{display:block;margin-bottom:.35rem;font-size:.8rem;font-weight:600;color:#22324d}.inp{width:100%;border:1px solid rgba(27,42,65,.12);border-radius:.75rem;padding:.6rem .75rem;font-size:.875rem;outline:none}.inp:focus{border-color:#1499B0;box-shadow:0 0 0 3px rgba(20,153,176,.15)}.err{color:#dc2626;font-size:.75rem;margin-top:.25rem}</style>
 @endsection

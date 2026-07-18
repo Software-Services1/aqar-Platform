@@ -16,24 +16,27 @@ class DashboardController extends Controller
         $activeCount = Platform::active()->count();
 
         $contracts = fn () => $isManager
-            ? Contract::query()
-            : Contract::query()->where(function ($q) use ($user) {
-                $q->where('created_by', $user->id)
-                  ->orWhereHas('licenses', fn ($l) => $l->where('employee_id', $user->id));
-            });
+            ? Contract::query()->where('is_draft', false)
+            : Contract::query()->visibleToEmployee($user->id);
 
         $licenses = fn () => $isManager
             ? AdLicense::query()
             : AdLicense::query()->where('employee_id', $user->id);
 
         // عدّ حالات العقود ديناميكياً
+        // عدّ حالات العقود في استعلام واحد (بدل استعلام لكل حالة)
+        $rawCounts = (clone $contracts())
+            ->selectRaw('approval_status, count(*) as c')
+            ->groupBy('approval_status')
+            ->pluck('c', 'approval_status');
+
         $statusCounts = [];
         foreach (array_keys(Contract::STATUSES) as $key) {
-            $statusCounts[$key] = (clone $contracts())->where('approval_status', $key)->count();
+            $statusCounts[$key] = (int) ($rawCounts[$key] ?? 0);
         }
 
         $stats = [
-            'contracts_total'   => $contracts()->count(),
+            'contracts_total'   => array_sum($statusCounts),
             'approved'          => $statusCounts['approved'],
             'pending'           => $statusCounts['pending'],
             'finished'          => $statusCounts['finished'],

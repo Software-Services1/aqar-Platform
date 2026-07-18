@@ -41,8 +41,11 @@ class NotificationBell extends Component
 
     public function render()
     {
+        // لا تُجلب قائمة الإشعارات إلا عند فتح القائمة (توفير استعلام في كل استطلاع)
         return view('livewire.notification-bell', [
-            'items' => auth()->user()->notifications()->take(8)->get(),
+            'items' => $this->open
+                ? auth()->user()->notifications()->take(8)->get()
+                : collect(),
         ]);
     }
 }

@@ -12,11 +12,12 @@ $icons = [
   'chart' => 'M3 3v18h18M7 14l3-4 3 3 4-6',
   'idcard'=> 'M3 5h18v14H3zM7 9h4M7 13h7M16 9a2 2 0 11-2 2',
   'shield'=> 'M12 2l8 3v6c0 5-3.5 8-8 11-4.5-3-8-6-8-11V5z',
+  'chat'  => 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z',
   'building'=> 'M4 21V5a1 1 0 011-1h9a1 1 0 011 1v16M15 21V9h4a1 1 0 011 1v11M8 8h3M8 12h3M8 16h3',
   'dot'   => 'M12 12h.01',
 ];
 @endphp
-<a href="{{ $href }}"
+<a href="{{ $href }}" wire:navigate
    class="nav-link group flex items-center gap-3 rounded-lg px-3 py-2.5 text-white/65 transition hover:bg-white/5 hover:text-white {{ $active ? 'active' : '' }}">
     <svg class="ico h-[18px] w-[18px] shrink-0 text-white/45 group-hover:text-white/80" viewBox="0 0 24 24"
          fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">

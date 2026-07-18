@@ -80,5 +80,4 @@ $pub = ['none' => ['لم يُنشر', 'text-danger bg-danger/10'], 'partial' => 
     </div>
     <div class="border-t border-ink/5 px-4 py-3">{{ $licenses->links() }}</div>
 </div>
-<style>.lbl{display:block;margin-bottom:.35rem;font-size:.78rem;font-weight:600;color:#22324d}.inp{border:1px solid rgba(27,42,65,.12);border-radius:.75rem;padding:.55rem .7rem;font-size:.85rem;outline:none}.inp:focus{border-color:#1499B0;box-shadow:0 0 0 3px rgba(20,153,176,.15)}</style>
 @endsection

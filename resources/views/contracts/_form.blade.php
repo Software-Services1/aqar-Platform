@@ -48,7 +48,7 @@
         @error('responsible_name')<p class="err">{{ $message }}</p>@enderror
     </div>
     <div>
-        <label class="lbl">جوال المسؤول</label>
+        <label class="lbl">جوال المندوب</label>
         <input name="responsible_phone" value="{{ old('responsible_phone', $c?->responsible_phone) }}" class="inp" dir="ltr" placeholder="05xxxxxxxx">
         @error('responsible_phone')<p class="err">{{ $message }}</p>@enderror
     </div>
@@ -85,5 +85,36 @@
     <div class="sm:col-span-2">
         <label class="lbl">ملاحظات</label>
         <textarea name="notes" rows="3" class="inp">{{ old('notes', $c?->notes) }}</textarea>
+    </div>
+
+    @php
+        $isCreate = ! (isset($c) && $c->exists);
+        $allIds = $allEmployees->pluck('id')->map(fn ($i) => (string) $i)->all();
+        $assignedIds = collect(old('assigned', $isCreate ? $allIds : $c->assignedEmployees->pluck('id')->all()))
+            ->map(fn ($i) => (string) $i)->all();
+    @endphp
+    <div class="sm:col-span-2" x-data="{ ids: @js($allIds), selected: @js($assignedIds) }">
+        <label class="lbl">إشعار / إظهار العقد للموظفين <span class="font-normal text-ink-muted">(الافتراضي: الكل)</span></label>
+        <div class="rounded-xl border border-ink/12 p-3">
+            <label class="mb-2 flex cursor-pointer items-center gap-2 border-b border-ink/8 pb-2 font-semibold text-ink">
+                <input type="checkbox"
+                       @change="selected = $event.target.checked ? [...ids] : []"
+                       :checked="ids.length > 0 && selected.length === ids.length"
+                       class="h-4 w-4 rounded border-ink/20 text-brass">
+                الكل
+            </label>
+            <div class="max-h-40 space-y-1 overflow-y-auto">
+                @forelse ($allEmployees as $emp)
+                    <label class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-paper">
+                        <input type="checkbox" name="assigned[]" value="{{ $emp->id }}" x-model="selected"
+                               class="h-4 w-4 rounded border-ink/20 text-brass">
+                        <span class="text-[13px] text-ink">{{ $emp->name }}</span>
+                    </label>
+                @empty
+                    <p class="text-[13px] text-ink-muted">لا يوجد موظفون.</p>
+                @endforelse
+            </div>
+        </div>
+        <p class="mt-1 text-[11px] text-ink-muted">سيُشعَر الموظفون المختارون فقط، وذلك عند اعتماد العقد.</p>
     </div>
 </div>

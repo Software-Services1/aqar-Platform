@@ -13,20 +13,17 @@ use Illuminate\Support\Facades\Mail;
 class NotificationService
 {
     /**
-     * عند إنشاء عقد جديد → إشعار «عقد جديد» لكل الموظفين النشطين،
-     * ليقوم كل موظف بإنشاء ترخيصه الخاص لهذا العقد.
+     * عند اعتماد عقد → إشعار الموظفين المصرّح لهم (المختارين) فقط.
      */
     public function contractCreated(Contract $contract): void
     {
-        $employees = Employee::where('is_active', true)
-            ->whereHas('roles', fn ($q) => $q->where('name', 'employee'))
-            ->get();
+        $employees = $contract->assignedEmployees()->where('is_active', true)->get();
 
         foreach ($employees as $employee) {
             AppNotification::create([
                 'employee_id'     => $employee->id,
                 'type'            => 'new_contract',
-                'message'         => "عقد جديد بانتظار إنشاء ترخيصك: «{$contract->project_name}» (رقم {$contract->contract_number}).",
+                'message'         => "عقد جديد بانتظار إنشاء ترخيصك: «{$contract->project_name}»" . ($contract->contract_number ? " (رقم {$contract->contract_number})." : '.'),
                 'notifiable_type' => Contract::class,
                 'notifiable_id'   => $contract->id,
             ]);

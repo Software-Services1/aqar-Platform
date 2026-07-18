@@ -67,6 +67,7 @@ class ReportController extends Controller
         ];
 
         $query = Contract::query()
+            ->where('is_draft', false)
             ->with(['representative', 'externalCompany', 'licenses'])
             ->betweenDates($filters['from'], $filters['to'])
             ->ofType($filters['contract_type'])
@@ -91,16 +92,22 @@ class ReportController extends Controller
             default       => null,
         };
 
+        // ملخّص الحالات في استعلام واحد (بدل 6 استعلامات عدّ)
+        $counts = (clone $query)
+            ->selectRaw('approval_status, count(*) as c')
+            ->groupBy('approval_status')
+            ->pluck('c', 'approval_status');
+
         return [
             'filters'  => $filters,
             'results'  => (clone $query)->latest('start_date')->paginate(20)->withQueryString(),
             'summary'  => [
-                'total'     => (clone $query)->count(),
-                'approved'  => (clone $query)->where('approval_status', 'approved')->count(),
-                'pending'   => (clone $query)->where('approval_status', 'pending')->count(),
-                'finished'  => (clone $query)->where('approval_status', 'finished')->count(),
-                'expired'   => (clone $query)->where('approval_status', 'expired')->count(),
-                'cancelled' => (clone $query)->where('approval_status', 'cancelled')->count(),
+                'total'     => (int) $counts->sum(),
+                'approved'  => (int) ($counts['approved'] ?? 0),
+                'pending'   => (int) ($counts['pending'] ?? 0),
+                'finished'  => (int) ($counts['finished'] ?? 0),
+                'expired'   => (int) ($counts['expired'] ?? 0),
+                'cancelled' => (int) ($counts['cancelled'] ?? 0),
             ],
         ];
     }
@@ -136,9 +143,16 @@ class ReportController extends Controller
             default   => null,
         };
 
-        $none = (clone $query)->where('platform_count', 0)->count();
-        $full = (clone $query)->where('platform_count', '>=', $threshold)->count();
-        $total = (clone $query)->count();
+        // ملخّص النشر في استعلام واحد (بدل 3 استعلامات)
+        $agg = (clone $query)
+            ->selectRaw('count(*) as total')
+            ->selectRaw('sum(case when platform_count = 0 then 1 else 0 end) as none_c')
+            ->selectRaw("sum(case when platform_count >= {$threshold} then 1 else 0 end) as full_c")
+            ->first();
+
+        $total = (int) ($agg->total ?? 0);
+        $none  = (int) ($agg->none_c ?? 0);
+        $full  = (int) ($agg->full_c ?? 0);
 
         return [
             'filters'         => $filters,

@@ -18,6 +18,12 @@
                     @if($contract->is_subcontract)
                         <span class="rounded-full bg-brass/12 px-2.5 py-0.5 text-[12px] font-semibold text-brass">عقد فرعي</span>
                     @endif
+                    @if($contract->is_draft)
+                        <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[12px] font-semibold text-amber-700 ring-1 ring-amber-200">
+                            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+                            مسودة — بيانات ناقصة
+                        </span>
+                    @endif
                     <h2 class="font-display text-lg font-bold text-ink">{{ $contract->project_name }}</h2>
                 </div>
                 @can('manage-contracts')
@@ -36,16 +42,16 @@
                     'نوع العقد'      => $contract->type_label,
                     'نوع الصفقة'     => $contract->transaction_label,
                     'الحي'           => $contract->neighborhood ?: '—',
-                    'المطوّر'        => $contract->developer_name,
+                    'المطوّر'        => $contract->developer_name ?: '—',
                     'جوال المطوّر'   => $contract->developer_phone ?: '—',
                     'المسؤول عن العقد' => $contract->responsible_name ?: '—',
                     'جوال المسؤول'   => $contract->responsible_phone ?: '—',
                     'المندوب'        => $contract->representative?->name ?: '—',
                     'منشئ العقد'     => $contract->creator?->name ?: '—',
                     'حالة العقد'     => $contract->status_label,
-                    'تاريخ البداية'  => $contract->start_date->format('Y-m-d'),
-                    'تاريخ الانتهاء' => $contract->end_date->format('Y-m-d'),
-                    'الأيام المتبقية' => $contract->days_remaining < 0 ? 'انتهى' : $contract->days_remaining.' يوم',
+                    'تاريخ البداية'  => optional($contract->start_date)->format('Y-m-d') ?: '—',
+                    'تاريخ الانتهاء' => optional($contract->end_date)->format('Y-m-d') ?: '—',
+                    'الأيام المتبقية' => is_null($contract->days_remaining) ? '—' : ($contract->days_remaining < 0 ? 'انتهى' : $contract->days_remaining.' يوم'),
                 ] as $k => $v)
                     <div class="bg-white px-5 py-3">
                         <dt class="text-[12px] text-ink-muted">{{ $k }}</dt>
@@ -57,6 +63,16 @@
                 <div class="border-t border-ink/8 px-5 py-4">
                     <p class="text-[12px] text-ink-muted">ملاحظات</p>
                     <p class="mt-1 text-sm text-ink">{{ $contract->notes }}</p>
+                </div>
+            @endif
+            @if ($contract->assignedEmployees->isNotEmpty())
+                <div class="border-t border-ink/8 px-5 py-4">
+                    <p class="mb-2 text-[12px] text-ink-muted">مصرّح لهم برؤية العقد</p>
+                    <div class="flex flex-wrap gap-1.5">
+                        @foreach ($contract->assignedEmployees as $emp)
+                            <span class="rounded-full bg-brass/10 px-2.5 py-0.5 text-[12px] font-medium text-brass">{{ $emp->name }}</span>
+                        @endforeach
+                    </div>
                 </div>
             @endif
         </div>

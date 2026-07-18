@@ -2,10 +2,91 @@
 @tailwind components;
 @tailwind utilities;
 
-/* أنماط مخصّصة (كانت inline في القالب) */
-body { background:#F1F5F7; }
-.nav-link.active { background: rgba(20,153,176,.16); color:#fff; }
-.nav-link.active .ico { color:#8AD7E4; }
-::-webkit-scrollbar { width:10px; height:10px; }
-::-webkit-scrollbar-thumb { background:#c3d0d6; border-radius:99px; }
-[x-cloak]{ display:none !important; }
+/* ============ الأساسيات ============ */
+@layer base {
+  body { background: #F1F5F7; }
+
+  /* حلقة تركيز واضحة للوحة المفاتيح فقط (إمكانية وصول) */
+  :focus-visible {
+    outline: 2px solid #1499B0;
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  /* احترام تفضيل تقليل الحركة */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .01ms !important;
+      transition-duration: .01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ============ مكوّنات مشتركة (كانت مكرّرة inline في 13 واجهة) ============ */
+@layer components {
+  .lbl {
+    display: block;
+    margin-bottom: .35rem;
+    font-size: .8rem;
+    font-weight: 600;
+    color: #22324d;
+  }
+
+  .inp {
+    width: 100%;
+    border: 1px solid rgba(27, 42, 65, .12);
+    border-radius: .75rem;
+    background: #fff;
+    padding: .6rem .75rem;
+    font-size: .875rem;
+    color: #1B2A41;
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .inp:focus {
+    border-color: #1499B0;
+    box-shadow: 0 0 0 3px rgba(20, 153, 176, .15);
+  }
+  .inp:disabled { background: rgba(241, 245, 247, .7); color: #5b6b85; }
+
+  .inp-sm {
+    border: 1px solid rgba(27, 42, 65, .12);
+    border-radius: .6rem;
+    background: #fff;
+    padding: .4rem .6rem;
+    font-size: .8rem;
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .inp-sm:focus {
+    border-color: #1499B0;
+    box-shadow: 0 0 0 3px rgba(20, 153, 176, .15);
+  }
+
+  .err { margin-top: .25rem; font-size: .75rem; color: #dc2626; }
+
+  /* رأس جدول ثابت أثناء التمرير */
+  .table-sticky thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(255, 255, 255, .96);
+    backdrop-filter: blur(6px);
+  }
+}
+
+/* ============ تفاصيل الواجهة ============ */
+.nav-link.active { background: rgba(20,153,176,.16); color: #fff; }
+.nav-link.active .ico { color: #8AD7E4; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #c3d0d6; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #aebcc4; }
+
+[x-cloak] { display: none !important; }
+
+.busy { transition: opacity .15s ease; }
+
+@keyframes toast-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.toast-in { animation: toast-in .22s ease-out both; }

@@ -7,8 +7,8 @@
     @include('contracts._form')
     <div class="mt-6 flex gap-3 border-t border-ink/8 pt-5">
         <button class="rounded-xl bg-ink px-5 py-2.5 text-sm font-semibold text-white hover:bg-ink-soft">حفظ العقد</button>
+        <button type="submit" name="save_as_draft" value="1" formnovalidate class="rounded-xl border border-brass/40 px-5 py-2.5 text-sm font-semibold text-brass hover:bg-brass/10">حفظ كمسودة</button>
         <a href="{{ route('contracts.index') }}" class="rounded-xl px-5 py-2.5 text-sm font-medium text-ink-muted hover:bg-paper">إلغاء</a>
     </div>
 </form>
-<style>.lbl{display:block;margin-bottom:.35rem;font-size:.8rem;font-weight:600;color:#22324d}.inp{width:100%;border:1px solid rgba(27,42,65,.12);border-radius:.75rem;padding:.6rem .75rem;font-size:.875rem;outline:none}.inp:focus{border-color:#1499B0;box-shadow:0 0 0 3px rgba(20,153,176,.15)}.err{color:#dc2626;font-size:.75rem;margin-top:.25rem}</style>
 @endsection
