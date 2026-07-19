@@ -31,7 +31,7 @@ Route::middleware('auth')->group(function () {
 
     // العقود
     Route::resource('contracts', ContractController::class);
-    // العقود الفرعية (بصلاحية create-subcontract)
+    // العقود الفرعية (ضمن صلاحية إدارة العقود)
     Route::get('contracts/{contract}/sub', [ContractController::class, 'createSub'])->name('contracts.sub.create');
     Route::post('contracts/{contract}/sub', [ContractController::class, 'storeSub'])->name('contracts.sub.store');
 

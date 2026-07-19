@@ -111,7 +111,7 @@ class ContractController extends Controller
     /** نموذج إنشاء عقد فرعي لشركة أخرى — يأخذ بيانات العقد الأصل */
     public function createSub(Contract $contract)
     {
-        Gate::authorize('create-subcontract');
+        Gate::authorize('manage-contracts');
 
         // نسخة غير محفوظة من بيانات العقد الأصل لملء النموذج (عدا رقم العقد)
         $prefill = new Contract($contract->only([
@@ -129,7 +129,7 @@ class ContractController extends Controller
 
     public function storeSub(Request $request, Contract $contract)
     {
-        Gate::authorize('create-subcontract');
+        Gate::authorize('manage-contracts');
 
         $data = $this->validateContract($request);
 

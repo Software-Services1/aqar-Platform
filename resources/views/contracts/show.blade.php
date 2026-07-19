@@ -81,7 +81,7 @@
         <div class="overflow-hidden rounded-2xl bg-white shadow-card">
             <div class="flex items-center justify-between border-b border-ink/8 px-5 py-3">
                 <p class="font-display font-bold text-ink">العقود الفرعية <span class="text-ink-muted">({{ $contract->subContracts->count() }})</span></p>
-                @can('create-subcontract')
+                @can('manage-contracts')
                     <a href="{{ route('contracts.sub.create', $contract) }}" class="inline-flex items-center gap-1.5 rounded-lg bg-brass px-3 py-1.5 text-[13px] font-semibold text-white hover:opacity-90">
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
                         إنشاء عقد فرعي

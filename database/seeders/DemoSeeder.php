@@ -33,10 +33,8 @@ class DemoSeeder extends Seeder
         // دور مخصّص «مدير عقود» يملك صلاحية إدارة العقود (لعرض كل العقود دون دور مدير)
         $contractsManager = Role::firstOrCreate(['name' => 'مدير عقود', 'guard_name' => 'web']);
         $contractsManager->syncPermissions(['manage-contracts', 'view-reports']);
-        $employees[1]->syncRoles(['مدير عقود']); // فهد يرى كل العقود بكل حالاتها
+        $employees[1]->syncRoles(['مدير عقود']); // فهد يرى كل العقود ويستطيع إنشاء عقود فرعية
 
-        // منح سارة صلاحية إنشاء عقد فرعي مباشرةً (لتجربة الميزة)
-        $employees[0]->givePermissionTo('create-subcontract');
 
         $reps = collect([
             ['name' => 'خالد المطيري', 'phone' => '0551111111'],
